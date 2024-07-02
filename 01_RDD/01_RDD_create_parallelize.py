@@ -10,6 +10,13 @@ if __name__ == '__main__':
     conf=SparkConf().setMaster("local[*]").setAppName("test")
     sc=SparkContext(conf=conf)
 
-    # 并行化集合创建rdd
+    # 并行化集合创建rdd，本地集合 --> 分布式
     rdd=sc.parallelize(range(1,10))
     print("默认分区数是：",rdd.getNumPartitions())
+    # 指定分区数
+    rdd=sc.parallelize(range(1,10),3)
+    print("分区数是：", rdd.getNumPartitions())
+
+    # collect 将rdd中的每个分区中的数据，形成一个list对象
+    # collect:分布式 --> 本地集合
+    print(rdd.collect())
