@@ -6,6 +6,7 @@
 @Date   ：2024-07-03 14:26
 @Email  : yangzy927@qq.com
 @Desc   ：glom将rdd数据，加上嵌套，按照分区，可用于查看数据分区
+glom+collect返回值是一个展示各个分区的list
 =================================================="""
 from pyspark import SparkConf, SparkContext
 

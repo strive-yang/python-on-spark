@@ -18,6 +18,7 @@ if __name__ == '__main__':
 
     def process(iter):
         result=[]
+        print(iter.shape)    # 是一个迭代器
         for i in iter:
             result.append(i*10)
         return result
