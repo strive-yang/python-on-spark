@@ -65,28 +65,28 @@ if __name__ == '__main__':
     # data.printSchema()
     # data.show(5,truncate=False)
 
-    # # todo 1 筛选数据中的部分特征
-    # # 筛选出CallType!='Medical Incident'
-    # data.select('IncidentNumber','AlarmDtTm','CallType').\
-    #     where(data['CallType']!='Medical Incident').\
-    #     show(5,truncate=False)
-    #
-    # # todo 2 筛选报警类型的数量，和具体类型
-    # data.select('CallType').\
-    #     where(data['CallType'].isNotNull()).\
-    #     agg(F.countDistinct('CallType').alias('DistinctCallTypes')).\
-    #     show()
-    # data.select('CallType').\
-    #     where(data['CallType'].isNotNull()).\
-    #     distinct().\
-    #     show(10,truncate=False)
-    #
-    # # todo 3 修改列名Delay为ResponseDelayedinMins
-    # # dataframe是不可变得，所以在修改列名后需要生成新得对象
+    # todo 1 筛选数据中的部分特征
+    # 筛选出CallType!='Medical Incident'
+    data.select('IncidentNumber','AlarmDtTm','CallType').\
+        where(data['CallType']!='Medical Incident').\
+        show(5,truncate=False)
+
+    # todo 2 筛选报警类型的数量，和具体类型
+    data.select('CallType').\
+        where(data['CallType'].isNotNull()).\
+        agg(F.countDistinct('CallType').alias('DistinctCallTypes')).\
+        show()
+    data.select('CallType').\
+        where(data['CallType'].isNotNull()).\
+        distinct().\
+        show(10,truncate=False)
+
+    # todo 3 修改列名Delay为ResponseDelayedinMins
+    # dataframe是不可变得，所以在修改列名后需要生成新得对象
     new_data=data.withColumnRenamed('Delay','ResponseDelayedinMins')
-    # new_data.select('ResponseDelayedinMins').\
-    #     where(new_data['ResponseDelayedinMins']>5).\
-    #     show(10,truncate=False)
+    new_data.select('ResponseDelayedinMins').\
+        where(new_data['ResponseDelayedinMins']>5).\
+        show(10,truncate=False)
 
     # todo 4 将string转换为spark支持的时间戳或者日期
     # 用格式字符串'MM/dd/yyyy'\'MM/dd/yyyy hh:mm:ss a'指定何使的格式来转换数据类型
@@ -96,17 +96,17 @@ if __name__ == '__main__':
         drop('WatchDate').\
         withColumn('AvailableDtTS',F.to_timestamp(new_data['AlarmDtTm'],'MM/dd/yyyy hh:mm:ss a')).\
         drop('AlarmDtTm')
-    # ts_data.show(10,truncate=False)
-    # ts_data.printSchema()
+    ts_data.show(10,truncate=False)
+    ts_data.printSchema()
 
-    # # todo 5 最常见的消防报警类型
-    # # 统计所有报警类型出现的次数
-    # data.select('CallType').\
-    #     where(data['CallType'].isNotNull()).\
-    #     groupBy(data['CallType']).\
-    #     count().\
-    #     orderBy('count',ascending=False).\
-    #     show(10,truncate=False)
+    # todo 5 最常见的消防报警类型
+    # 统计所有报警类型出现的次数
+    data.select('CallType').\
+        where(data['CallType'].isNotNull()).\
+        groupBy(data['CallType']).\
+        count().\
+        orderBy('count',ascending=False).\
+        show(10,truncate=False)
 
     # todo 6 统计报警总数，平均响应时间，最短响应时间和最长响应时间
     ts_data.select(F.sum('NumAlarms'),F.avg('ResponseDelayedinMins'),
