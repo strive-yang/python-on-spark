@@ -4,7 +4,8 @@
 @Author ：Strive Yang
 @Date   ：2024-07-22 9:59
 @Email  : yangzy927@qq.com
-@Desc   ：
+@Desc   ：描述dataframe的创建和使用过程
+利用了dsl风格和函数F对数据进行了分析
 =================================================="""
 from pyspark.sql.types import StringType, IntegerType, StructType, StructField, FloatType
 from pyspark.sql import SparkSession
@@ -13,7 +14,6 @@ import pyspark.sql.functions as F
 
 def read_data(path, schema, data_type='csv', header='true'):
     """读取数据函数"""
-
     data = spark.read.format(data_type). \
         option('header', header). \
         schema(schema). \
@@ -67,48 +67,48 @@ if __name__ == '__main__':
 
     # todo 1 筛选数据中的部分特征
     # 筛选出CallType!='Medical Incident'
-    data.select('IncidentNumber','AlarmDtTm','CallType').\
-        where(data['CallType']!='Medical Incident').\
-        show(5,truncate=False)
+    data.select('IncidentNumber', 'AlarmDtTm', 'CallType'). \
+        where(data['CallType'] != 'Medical Incident'). \
+        show(5, truncate=False)
 
     # todo 2 筛选报警类型的数量，和具体类型
-    data.select('CallType').\
-        where(data['CallType'].isNotNull()).\
-        agg(F.countDistinct('CallType').alias('DistinctCallTypes')).\
+    data.select('CallType'). \
+        where(data['CallType'].isNotNull()). \
+        agg(F.countDistinct('CallType').alias('DistinctCallTypes')). \
         show()
-    data.select('CallType').\
-        where(data['CallType'].isNotNull()).\
-        distinct().\
-        show(10,truncate=False)
+    data.select('CallType'). \
+        where(data['CallType'].isNotNull()). \
+        distinct(). \
+        show(10, truncate=False)
 
     # todo 3 修改列名Delay为ResponseDelayedinMins
     # dataframe是不可变得，所以在修改列名后需要生成新得对象
-    new_data=data.withColumnRenamed('Delay','ResponseDelayedinMins')
-    new_data.select('ResponseDelayedinMins').\
-        where(new_data['ResponseDelayedinMins']>5).\
-        show(10,truncate=False)
+    new_data = data.withColumnRenamed('Delay', 'ResponseDelayedinMins')
+    new_data.select('ResponseDelayedinMins'). \
+        where(new_data['ResponseDelayedinMins'] > 5). \
+        show(10, truncate=False)
 
     # todo 4 将string转换为spark支持的时间戳或者日期
     # 用格式字符串'MM/dd/yyyy'\'MM/dd/yyyy hh:mm:ss a'指定何使的格式来转换数据类型
-    ts_data=new_data.withColumn('IncidentDate',F.to_timestamp(new_data['CallDate'],'MM/dd/yyyy')).\
-        drop('CallDate').\
-        withColumn('OnWatchDate',F.to_timestamp(new_data['WatchDate'],'MM/dd/yyyy')).\
-        drop('WatchDate').\
-        withColumn('AvailableDtTS',F.to_timestamp(new_data['AlarmDtTm'],'MM/dd/yyyy hh:mm:ss a')).\
+    ts_data = new_data.withColumn('IncidentDate', F.to_timestamp(new_data['CallDate'], 'MM/dd/yyyy')). \
+        drop('CallDate'). \
+        withColumn('OnWatchDate', F.to_timestamp(new_data['WatchDate'], 'MM/dd/yyyy')). \
+        drop('WatchDate'). \
+        withColumn('AvailableDtTS', F.to_timestamp(new_data['AlarmDtTm'], 'MM/dd/yyyy hh:mm:ss a')). \
         drop('AlarmDtTm')
-    ts_data.show(10,truncate=False)
+    ts_data.show(10, truncate=False)
     ts_data.printSchema()
 
     # todo 5 最常见的消防报警类型
     # 统计所有报警类型出现的次数
-    data.select('CallType').\
-        where(data['CallType'].isNotNull()).\
-        groupBy(data['CallType']).\
-        count().\
-        orderBy('count',ascending=False).\
-        show(10,truncate=False)
+    data.select('CallType'). \
+        where(data['CallType'].isNotNull()). \
+        groupBy(data['CallType']). \
+        count(). \
+        orderBy('count', ascending=False). \
+        show(10, truncate=False)
 
     # todo 6 统计报警总数，平均响应时间，最短响应时间和最长响应时间
-    ts_data.select(F.sum('NumAlarms'),F.avg('ResponseDelayedinMins'),
-                   F.min('ResponseDelayedinMins'),F.max('ResponseDelayedinMins')).\
+    ts_data.select(F.sum('NumAlarms'), F.avg('ResponseDelayedinMins'),
+                   F.min('ResponseDelayedinMins'), F.max('ResponseDelayedinMins')). \
         show()
