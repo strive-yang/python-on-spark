@@ -9,6 +9,7 @@ ps: a 数据中的值存在负值，需要处理
     b 数据中的时间列数据格式不统一，需要模糊处理
     c 每次show，DataFrame都会像RDD一样删除，再次遇到要根据血缘关系重新计算
     因此，为了避免重新计算，节约时间，在必要的时候需要对数据进行缓存persist
+    d 该程序在yarn下运行，需要将文件传入hdfs方便所有集群使用
 =================================================="""
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType,IntegerType
@@ -22,19 +23,19 @@ import pandas as pd
 import matplotlib.pylab as plt
 import time
 import seaborn as sns
-
 if __name__ == '__main__':
     time_start = time.time()  # 记录开始时间
     # 创建环境，spark.default.parallelism，自定义分区大小
     spark = SparkSession.builder. \
-        master('local[*]'). \
-        config('spark.sql.shuffle.partitions', 300). \
-        config("spark.debug.maxToStringFields", "200"). \
+        master('yarn'). \
+        config('spark.sql.shuffle.partitions', 400). \
         config('spark.default.parallelism', 400). \
-        config("spark.executor.memory", '24g'). \
         config("spark.driver.memory", '8g'). \
         config("spark.sql.legacy.timeParserPolicy", "LEGACY"). \
-        appName('pyspark for ml'). \
+        config("spark.executors.num", "5"). \
+        config("spark.executors.cores", "5"). \
+        config("spark.executor.memory", '24g'). \
+        appName('pyspark.for.ml.on.yarn'). \
         getOrCreate()
     sc = spark.sparkContext
 
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     # df = pd.read_excel(path, header=0, dtype={'InvoiceDate': str})
 
     # 1、加载数据
-    path = '../data/input/online_retail.csv'
+    path = 'hdfs:///user/zhenyu/data/online_retail.csv'
     # 定义数据格式
     schema = StructType([StructField('InvoiceNo', StringType(), True),
                          StructField('StockCode', StringType(), True),
@@ -61,8 +62,8 @@ if __name__ == '__main__':
     print("数据中所有客户的数量: ", data.select('CustomerID').distinct().count())
 
     # 数据稍微处理下，Quantity、UnitPrice为正值
-    data=data.withColumn('Quantity',F.abs('Quantity')).\
-        withColumn('UnitPrice',F.abs('UnitPrice'))
+    data=data.withColumn('Quantity',F.abs(data['Quantity'])).\
+        withColumn('UnitPrice',F.abs(data['UnitPrice']))
 
     # 2、各个国家购买商品的数量
     print("所有国家购买商品数量")
@@ -122,7 +123,7 @@ if __name__ == '__main__':
     scale=StandardScaler(inputCol='features',outputCol='standardized')
     data_scale=scale.fit(assemble_data)
     data_scale_output=data_scale.transform(assemble_data)
-    data_scale_output.persist(StorageLevel.DISK_ONLY)   # 缓存数据，show后数据会消失，重新生成浪费时间且在训练模型时有bug
+    data_scale_output.persist(storageLevel=StorageLevel.MEMORY_AND_DISK)   # 缓存数据，show后数据会消失，重新生成浪费时间且在训练模型时有bug
     data_scale_output.show(10, truncate=False)
 
     cost = np.zeros(10)

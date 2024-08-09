@@ -12,7 +12,7 @@
       <paths name="zhenyu@172.16.11.22:22">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/zhenyu/tmp/pycharm_project_345" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/zhenyu/tmp/pycharm_project_345" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
