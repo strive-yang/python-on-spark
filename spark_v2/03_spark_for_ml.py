@@ -35,7 +35,7 @@ if __name__ == '__main__':
         config("spark.executors.num", "5"). \
         config("spark.executors.cores", "5"). \
         config("spark.executor.memory", '24g'). \
-        appName('pyspark.for.ml.on.yarn'). \
+        appName('pyspark.for.ml.on.yarn.kmeans'). \
         getOrCreate()
     sc = spark.sparkContext
 
